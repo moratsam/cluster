@@ -1,0 +1,12 @@
+syntax = "proto3";
+package msg.v1;
+option go_package = "github.com/moratsam/cluster/api/v1/msg";
+
+enum MsgType{
+	VANILLA = 0;
+}
+
+message Msg{
+	MsgType type = 1;
+	string data = 2;
+}
