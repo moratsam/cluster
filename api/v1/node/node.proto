@@ -1,0 +1,18 @@
+syntax = "proto3";
+package node.v1;
+option go_package = "github.com/moratsam/cluster/api/v1/node";
+
+import "api/v1/msg/msg.proto";
+
+service Node{
+	rpc Subscribe(SubscriptionRequest) returns (stream msg.v1.Msg) {}
+	rpc Publish(msg.v1.Msg) returns (Ack) {}
+}
+
+message Ack {
+	bool ok = 1;
+}
+
+message SubscriptionRequest{
+	msg.v1.MsgType type = 1;
+}
