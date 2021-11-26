@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: broadcaster-headless
+  labels:
+    {{- include "cluster.labels" . | nindent 4 }}
+    app: broadcaster
+spec:
+  type: ClusterIP
+  clusterIP: None #headless service definition
+  ports:
+    - port: {{ .Values.broadcasterRpcPort}}
+      targetPort: {{ .Values.broadcasterRpcPort}}
+  selector:
+    {{- include "cluster.selectorLabels" . | nindent 4 }}
+    app: broadcaster

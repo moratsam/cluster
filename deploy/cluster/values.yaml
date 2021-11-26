@@ -2,7 +2,8 @@ image:
   repository: github.com/moratsam/cluster
   tag: 0.0.1
   pullPolicy: IfNotPresent
-broadcasterRpcPort: 8400
-nodeRpcPort: 8401
-replicas: 3
 
+broadcasterRpcPort: 8400
+
+nodeRpcPort: 8401
+nodeReplicas: 3

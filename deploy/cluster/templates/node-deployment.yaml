@@ -8,6 +8,7 @@ spec:
   selector:
     matchLabels:
       {{- include "cluster.selectorLabels" . | nindent 6 }}
+  replicas: {{ .Values.nodeReplicas }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -21,8 +22,5 @@ spec:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag}}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          env:
-          - name: BCASTER_ADDR
-            value: "kurbarija:8080"
           command: ["/bin/cluster"]
           args: ["run", "node"]
