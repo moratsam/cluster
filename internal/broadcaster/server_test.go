@@ -1,4 +1,4 @@
-package server
+package broadcaster
 
 import (
 	"context"
@@ -40,10 +40,6 @@ func setupTest(t *testing.T, fn func()) (
 	l, err := net.Listen("tcp", ":0")
 	require.NoError(t, err)
 
-	clientOptions := []grpc.DialOption{grpc.WithInsecure()}
-	cc, err := grpc.Dial(l.Addr().String(), clientOptions...)
-	require.NoError(t, err)
-
 	server, err := NewGRPCServer()
 	require.NoError(t, err)
 
@@ -51,6 +47,9 @@ func setupTest(t *testing.T, fn func()) (
 		server.Serve(l)
 	}()
 
+	clientOptions := []grpc.DialOption{grpc.WithInsecure()}
+	cc, err := grpc.Dial(l.Addr().String(), clientOptions...)
+	require.NoError(t, err)
 	client = api_queue.NewQueueClient(cc)
 	client2 = api_queue.NewQueueClient(cc)
 	

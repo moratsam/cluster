@@ -51,10 +51,6 @@ func setupTest(t *testing.T, fn func()) (
 	//fire up two node servers
 	l1, err := net.Listen("tcp", ":0")
 	require.NoError(t, err)
-	clientOptions := []grpc.DialOption{grpc.WithInsecure()}
-	cc1, err := grpc.Dial(l1.Addr().String(), clientOptions...)
-	require.NoError(t, err)
-
 	server1, err := NewGRPCServer(broadcaster_addr)
 	require.NoError(t, err)
 
@@ -62,14 +58,14 @@ func setupTest(t *testing.T, fn func()) (
 		server1.Serve(l1)
 	}()
 
+	clientOptions := []grpc.DialOption{grpc.WithInsecure()}
+	cc1, err := grpc.Dial(l1.Addr().String(), clientOptions...)
+	require.NoError(t, err)
 	client1 := api_node.NewNodeClient(cc1)
 
 
 	l2, err := net.Listen("tcp", ":0")
 	require.NoError(t, err)
-	cc2, err := grpc.Dial(l2.Addr().String(), clientOptions...)
-	require.NoError(t, err)
-
 	server2, err := NewGRPCServer(broadcaster_addr)
 	require.NoError(t, err)
 
@@ -77,6 +73,8 @@ func setupTest(t *testing.T, fn func()) (
 		server2.Serve(l2)
 	}()
 
+	cc2, err := grpc.Dial(l2.Addr().String(), clientOptions...)
+	require.NoError(t, err)
 	client2 = api_node.NewNodeClient(cc2)
 	
 	return client1, client2, func(){
