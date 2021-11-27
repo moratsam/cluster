@@ -5,7 +5,9 @@ import (
 	"sync"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
 	"go.uber.org/zap"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 
 	api_msg "github.com/moratsam/cluster/api/v1/msg"
 	api_queue "github.com/moratsam/cluster/api/v1/queue"
@@ -23,6 +25,11 @@ type grpcServer struct {
 
 func NewGRPCServer() (*grpc.Server, error){
 	gsrv := grpc.NewServer()
+
+	hsrv := health.NewServer()
+	hsrv.SetServingStatus("", healthpb.HealthCheckResponse_SERVING)
+	healthpb.RegisterHealthServer(gsrv, hsrv)
+
 	srv, err := newgrpcServer()
 	if err != nil {
 		return nil, err

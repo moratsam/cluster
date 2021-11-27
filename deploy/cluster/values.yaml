@@ -3,7 +3,8 @@ image:
   tag: 0.0.1
   pullPolicy: IfNotPresent
 
-broadcasterRpcPort: 8400
+broadcasterRpcPort: 55488
 
-nodeRpcPort: 8401
+nodeRpcPort: 55489
 nodeReplicas: 3
+storage: 1Gi
