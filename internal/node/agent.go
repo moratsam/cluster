@@ -45,11 +45,19 @@ func (a *Agent) setupLogger() error {
 }
 
 func (a *Agent) setupServer() error {
-	l, err := net.Listen("tcp", a.Config.BindAddr)
+	addr, err := net.ResolveTCPAddr("tcp", a.Config.BindAddr)
 	if err != nil {
 		return err
 	}
-	server, err := NewGRPCServer(a.Config.BroadcasterAddr)
+	l, err := net.Listen("tcp", addr.String())
+	if err != nil {
+		return err
+	}
+	addr, err = net.ResolveTCPAddr("tcp", a.Config.BroadcasterAddr)
+	if err != nil {
+		return err
+	}
+	server, err := NewGRPCServer(addr.String())
 	if err != nil {
 		return err
 	}

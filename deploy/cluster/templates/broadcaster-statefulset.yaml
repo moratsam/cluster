@@ -42,8 +42,6 @@ spec:
         ports:
         - containerPort: {{ .Values.broadcasterRpcPort}}
           name: rpc
-        args:
-          - --config-file=/var/run/cluster/config.yaml
         readinessProbe:
           exec:
             command: ["/bin/grpc_health_probe", "-addr=:{{ .Values.broadcasterRpcPort }}"]
@@ -53,7 +51,8 @@ spec:
             command: ["/bin/grpc_health_probe", "-addr=:{{ .Values.broadcasterRpcPort }}"]
           initialDelaySeconds: 10
         command: ["/bin/cluster"]
-        args: ["run", "broadcaster"]
+        args:
+          ["run", "broadcaster", "--config-file=/var/run/cluster/config.yaml"]
         volumeMounts:
         - name: datadir
           mountPath: /var/run/cluster

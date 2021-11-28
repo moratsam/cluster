@@ -44,8 +44,6 @@ spec:
         ports:
         - containerPort: {{ .Values.nodeRpcPort }}
           name: rpc
-        args:
-          - --config-file=/var/run/cluster/config.yaml
         readinessProbe:
           exec:
             command: ["/bin/grpc_health_probe", "-addr=:{{ .Values.nodeRpcPort }}"]
@@ -55,7 +53,8 @@ spec:
             command: ["/bin/grpc_health_probe", "-addr=:{{ .Values.nodeRpcPort }}"]
           initialDelaySeconds: 10
         command: ["/bin/cluster"]
-        args: ["run", "node"]
+        args:
+          ["run", "node", "--config-file=/var/run/cluster/config.yaml"]
         volumeMounts:
         - name: datadir
           mountPath: /var/run/cluster

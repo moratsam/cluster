@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -23,6 +24,9 @@ func runCmdValidator(cmd *cobra.Command, args []string) error {
 }
 
 func (c *cli) runCmdRun(cmd *cobra.Command, args []string) error{
+	fmt.Println("reading config file breh")
+	fmt.Println("bcaster bind addr is: ", c.cfg.broadcasterConfig.BindAddr)
+
 	if args[0] == "broadcaster" {
 		_, err := broadcaster.NewAgent(c.cfg.broadcasterConfig)
 		if err != nil {
@@ -46,6 +50,7 @@ func (c *cli) newRunCmd() *cobra.Command {
 		Use:		"run [broadcaster, node]",
 		Short:	"run something",
 		Args:		runCmdValidator,
+		PreRunE:	c.setupConfig,
 		RunE:		c.runCmdRun,
 	}
 

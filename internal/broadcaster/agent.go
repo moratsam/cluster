@@ -13,6 +13,7 @@ type Config struct {
 }
 
 type Agent struct {
+	logger *zap.Logger
 	Config
 }
 
@@ -37,11 +38,17 @@ func (a *Agent) setupLogger() error {
 	}
 	zap.ReplaceGlobals(logger)
 	logger.Debug("broadcaster agent", zap.String("BindAddr", a.Config.BindAddr))
+	a.logger = logger
 	return nil
 }
 
 func (a *Agent) setupServer() error {
-	l, err := net.Listen("tcp", a.Config.BindAddr)
+	addr, err := net.ResolveTCPAddr("tcp", a.Config.BindAddr) //resolve hostname to IP
+	if err != nil {
+		return err
+	}
+	a.logger.Debug("", zap.String("addr", addr.String()))
+	l, err := net.Listen("tcp", addr.String())
 	if err != nil {
 		return err
 	}

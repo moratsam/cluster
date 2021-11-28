@@ -28,16 +28,16 @@ func setupFlags(cmd *cobra.Command) error {
 func (c *cli) setupConfig(cmd *cobra.Command, args []string) error {
 	config_file, err := cmd.Flags().GetString("config-file")
 	if err != nil {
-		log.Fatal("error getting config file flag")
 		return err
 	}
 	viper.SetConfigFile(config_file)
 	if err := viper.ReadInConfig(); err != nil {
-		log.Fatal("config file is necessary but was not found")
-		return err
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			log.Fatal("config file is necessary but was not found", err)
+			return err
+		}
 	}
 	c.cfg.broadcasterConfig.BindAddr		= viper.GetString("broadcaster-bind-addr")
-
 	c.cfg.nodeConfig.BindAddr				= viper.GetString("node-bind-addr")
 	c.cfg.nodeConfig.BroadcasterAddr		= viper.GetString("broadcaster-bind-addr")
 	return nil
@@ -56,12 +56,15 @@ func Execute() {
 	not prevent this world inhabited by the distracted and restless from being 
 	what it is, will still help to transmit to someone the sensation of the truth —
 	a sensation that could become for them the principle of a liberating crisis.`,
-		PreRunE:	cli.setupConfig,
 	}
-	rootCmd.AddCommand(cli.newRunCmd())
-	if err := setupFlags(rootCmd); err != nil {
+
+	runCmd := cli.newRunCmd()
+	if err := setupFlags(runCmd); err != nil {
 		log.Fatal(err)
 	}
+
+	rootCmd.AddCommand(runCmd)
+
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal("error executing rootCmd", err)
 	}
