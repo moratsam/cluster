@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-headless
+  labels:
+    {{- include "clusterino.labels" . | nindent 4 }}
+    app: node
+spec:
+  type: ClusterIP
+  clusterIP: None #headless service definition
+  ports:
+    - port: {{ .Values.nodeRpcPort}}
+      targetPort: {{ .Values.nodeRpcPort}}
+  selector:
+    {{- include "clusterino.selectorLabels" . | nindent 4 }}
+    app: node

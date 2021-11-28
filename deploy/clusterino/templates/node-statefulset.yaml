@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "clusterino.fullname" . }}-node
+  labels:
+    {{- include "clusterino.labels" . | nindent 4 }}
+    app: node
+spec:
+  selector:
+    matchLabels:
+      {{- include "clusterino.selectorLabels" . | nindent 6 }}
+      app: node
+  serviceName: {{ include "clusterino.fullname" . }}
+  replicas: {{ .Values.nodeReplicas }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "clusterino.selectorLabels" . | nindent 8 }}
+        app: node
+    spec:
+      initContainers:
+      - name: {{include "clusterino.fullname" . }}-node-config-init
+        image: k8s.gcr.io/e2e-test-images/jessie-dnsutils:1.3
+        imagePullPolicy: IfNotPresent
+        command:
+          - /bin/sh
+          - -c
+          - |-
+            BCASTER_ADDR=$(nslookup broadcaster-headless | grep "^Address" | tail -a | awk '{print $2}' | tr -d '\r') #excess carriage return fucks up bash string concatenation
+            cat > /var/run/clusterino/config.yaml << EOD
+            node-bind-addr: "$HOSTNAME.clusterino.{{.Release.Namespace}}.svc.cluster.local:{{.Values.nodeRpcPort}}"
+            broadcaster-bind-addr: "$BCASTER_ADDR:{{.Values.broadcasterRpcPort}}"
+            EOD
+        volumeMounts:
+        - name: datadir
+          mountPath: /var/run/clusterino
+      containers:
+      - name: {{ .Chart.Name }}-node
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag}}"
+        ports:
+        - containerPort: {{ .Values.nodeRpcPort }}
+          name: rpc
+        readinessProbe:
+          exec:
+            command: ["/bin/grpc_health_probe", "-addr=:{{ .Values.nodeRpcPort }}"]
+          initialDelaySeconds: 10
+        livenessProbe:
+          exec:
+            command: ["/bin/grpc_health_probe", "-addr=:{{ .Values.nodeRpcPort }}"]
+          initialDelaySeconds: 10
+        command: ["/bin/cluster"]
+        args:
+          ["run", "node", "--config-file=/var/run/clusterino/config.yaml"]
+        volumeMounts:
+        - name: datadir
+          mountPath: /var/run/clusterino
+  volumeClaimTemplates:
+  - metadata:
+      name: datadir
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: {{ .Values.storage }}

@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "clusterino.fullname" . }}-broadcaster
+  labels:
+    {{- include "clusterino.labels" . | nindent 4 }}
+    app: broadcaster
+spec:
+  selector:
+    matchLabels:
+      {{- include "clusterino.selectorLabels" . | nindent 6 }}
+      app: broadcaster
+  serviceName: {{ include "clusterino.fullname" . }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "clusterino.selectorLabels" . | nindent 8 }}
+        app: broadcaster
+    spec:
+      initContainers:
+      - name: {{include "clusterino.fullname" . }}-broadcaster-config-init
+        image: busybox
+        imagePullPolicy: IfNotPresent
+        command:
+          - /bin/sh
+          - -c
+          - |-
+            cat > /var/run/clusterino/config.yaml << EOD
+            broadcaster-bind-addr: "$HOSTNAME.clusterino.{{.Release.Namespace}}.svc.cluster.local:{{.Values.broadcasterRpcPort}}"
+            node-bind-addr: "mayBeUsedInTheFuture"
+            EOD
+        volumeMounts:
+        - name: datadir
+          mountPath: /var/run/clusterino
+      containers:
+      - name: {{ .Chart.Name }}-broadcaster
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag}}"
+        ports:
+        - containerPort: {{ .Values.broadcasterRpcPort}}
+          name: rpc
+        readinessProbe:
+          exec:
+            command: ["/bin/grpc_health_probe", "-addr=:{{ .Values.broadcasterRpcPort }}"]
+          initialDelaySeconds: 10
+        livenessProbe:
+          exec:
+            command: ["/bin/grpc_health_probe", "-addr=:{{ .Values.broadcasterRpcPort }}"]
+          initialDelaySeconds: 10
+        command: ["/bin/cluster"]
+        args:
+          ["run", "broadcaster", "--config-file=/var/run/clusterino/config.yaml"]
+        volumeMounts:
+        - name: datadir
+          mountPath: /var/run/clusterino
+  volumeClaimTemplates:
+  - metadata:
+      name: datadir
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: {{ .Values.storage }}
